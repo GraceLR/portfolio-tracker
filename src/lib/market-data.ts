@@ -1,5 +1,4 @@
 import type { Asset, AssetType } from "@/lib/portfolio"
-import { lookup as lookupStock } from "stock-ticker-symbol"
 
 const COINGECKO_API = "https://api.coingecko.com/api/v3"
 
@@ -75,7 +74,9 @@ export async function lookupSymbol(
   const data = await response.json() as CoinGeckoSearchResponse
   const match = data.coins.find((coin) => coin.symbol.toUpperCase() === normalizedSymbol)
   if (!match) {
-    const stockName = lookupStock(normalizedSymbol)
+    const stockDirectoryModule = await import("stock-ticker-symbol/tickerToName.json")
+    const stockDirectory = stockDirectoryModule.default as Record<string, { name: string }>
+    const stockName = stockDirectory[normalizedSymbol]?.name
     return stockName
       ? {
           symbol: normalizedSymbol,
