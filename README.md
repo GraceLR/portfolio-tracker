@@ -8,7 +8,7 @@ A front-end portfolio dashboard built with React and TypeScript. It answers thre
 
 The app includes sample stocks, ETFs, and cryptocurrency and lets you record buy, sell, and dividend transactions. Data currently lives in React state, which keeps this version simple while leaving a clear path to an API later.
 
-The portfolio selector filters the dashboard between the whole portfolio, growth, dividends, and crypto. Symbol entry checks assets already in the portfolio, then queries CoinGecko for public cryptocurrency metadata. CoinGecko prices refresh every 60 seconds; stocks and ETFs keep their saved sample prices until a backend can protect credentials for a broader market-data provider.
+The portfolio selector filters the dashboard between the whole portfolio, growth, dividends, and crypto. Symbol entry checks assets already in the portfolio, queries CoinGecko for cryptocurrency metadata, and then checks a bundled US security directory for stocks such as VZ. CoinGecko prices refresh every 60 seconds; stocks and ETFs keep their saved sample prices until a backend can protect credentials for a broader market-data provider.
 
 ## Run locally
 

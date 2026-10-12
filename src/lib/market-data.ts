@@ -1,4 +1,5 @@
 import type { Asset, AssetType } from "@/lib/portfolio"
+import { lookup as lookupStock } from "stock-ticker-symbol"
 
 const COINGECKO_API = "https://api.coingecko.com/api/v3"
 
@@ -18,7 +19,7 @@ export interface SymbolMatch {
   type: AssetType
   coinGeckoId?: string
   currentPrice?: number
-  source: "portfolio" | "coingecko"
+  source: "portfolio" | "coingecko" | "security-directory"
 }
 
 export async function refreshPublicPrices(assets: Asset[], signal?: AbortSignal) {
@@ -73,7 +74,17 @@ export async function lookupSymbol(
 
   const data = await response.json() as CoinGeckoSearchResponse
   const match = data.coins.find((coin) => coin.symbol.toUpperCase() === normalizedSymbol)
-  if (!match) return null
+  if (!match) {
+    const stockName = lookupStock(normalizedSymbol)
+    return stockName
+      ? {
+          symbol: normalizedSymbol,
+          name: stockName,
+          type: "Stock",
+          source: "security-directory",
+        }
+      : null
+  }
 
   const priceResponse = await fetch(
     `${COINGECKO_API}/simple/price?ids=${encodeURIComponent(match.id)}&vs_currencies=usd`,

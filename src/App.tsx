@@ -473,7 +473,13 @@ function App() {
                 />
                 <p className={`min-h-4 text-[11px] ${lookupStatus === "error" || lookupStatus === "not-found" ? "text-[#a36c27]" : "text-[#77847f]"}`}>
                   {lookupStatus === "searching" && "Looking up symbol…"}
-                  {lookupStatus === "found" && `${symbolMatch?.source === "coingecko" ? "Live provider" : "Portfolio"} match found`}
+                  {lookupStatus === "found" && `${
+                    symbolMatch?.source === "coingecko"
+                      ? "Live crypto provider"
+                      : symbolMatch?.source === "security-directory"
+                        ? "US security directory"
+                        : "Portfolio"
+                  } match found`}
                   {lookupStatus === "not-found" && "No public match. Enter the details below."}
                   {lookupStatus === "error" && "Lookup unavailable. You can enter details manually."}
                 </p>
