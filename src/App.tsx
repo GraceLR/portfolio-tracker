@@ -77,7 +77,6 @@ function App() {
   const [lookupStatus, setLookupStatus] = useState<"idle" | "searching" | "found" | "not-found" | "error">("idle")
   const [symbolMatch, setSymbolMatch] = useState<SymbolMatch | null>(null)
   const assetsRef = useRef(assets)
-  assetsRef.current = assets
 
   const allHoldings = useMemo(() => calculateHoldings(assets, transactions), [assets, transactions])
   const holdings = selectedPortfolio === "Whole Portfolio"
@@ -91,6 +90,10 @@ function App() {
     transactions.filter((transaction) => visibleSymbols.has(transaction.symbol)),
   )
   const cryptoIds = assets.map((asset) => asset.coinGeckoId).filter(Boolean).join(",")
+
+  useEffect(() => {
+    assetsRef.current = assets
+  }, [assets])
 
   useEffect(() => {
     const controller = new AbortController()
