@@ -1,12 +1,15 @@
 export type AssetType = "Stock" | "ETF" | "Crypto"
 export type TransactionType = "buy" | "sell" | "dividend"
+export type PortfolioName = "Growth Portfolio" | "Dividends Portfolio" | "Crypto"
 
 export interface Asset {
   symbol: string
   name: string
   type: AssetType
+  portfolio: PortfolioName
   currentPrice: number
   color: string
+  coinGeckoId?: string
 }
 
 export interface Transaction {
@@ -28,10 +31,10 @@ export interface Holding extends Asset {
 }
 
 export const seedAssets: Asset[] = [
-  { symbol: "VTI", name: "Vanguard Total Stock Market", type: "ETF", currentPrice: 311.42, color: "#7857ef" },
-  { symbol: "AAPL", name: "Apple Inc.", type: "Stock", currentPrice: 247.88, color: "#2e8c74" },
-  { symbol: "BTC", name: "Bitcoin", type: "Crypto", currentPrice: 68124.3, color: "#ef9b44" },
-  { symbol: "SCHD", name: "Schwab US Dividend Equity", type: "ETF", currentPrice: 31.18, color: "#4a82d8" },
+  { symbol: "VTI", name: "Vanguard Total Stock Market", type: "ETF", portfolio: "Growth Portfolio", currentPrice: 311.42, color: "#7857ef" },
+  { symbol: "AAPL", name: "Apple Inc.", type: "Stock", portfolio: "Growth Portfolio", currentPrice: 247.88, color: "#2e8c74" },
+  { symbol: "BTC", name: "Bitcoin", type: "Crypto", portfolio: "Crypto", currentPrice: 68124.3, color: "#ef9b44", coinGeckoId: "bitcoin" },
+  { symbol: "SCHD", name: "Schwab US Dividend Equity", type: "ETF", portfolio: "Dividends Portfolio", currentPrice: 31.18, color: "#4a82d8" },
 ]
 
 const monthsAgo = (months: number, day: number) => {

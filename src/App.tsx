@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { FormEvent, ReactNode } from "react"
 import {
   ArrowDownLeft,
@@ -7,6 +7,7 @@ import {
   CircleDollarSign,
   Landmark,
   Plus,
+  RefreshCw,
   Sparkles,
   WalletCards,
 } from "lucide-react"
@@ -30,9 +31,11 @@ import {
   trailingYearDividends,
   type Asset,
   type AssetType,
+  type PortfolioName,
   type Transaction,
   type TransactionType,
 } from "@/lib/portfolio"
+import { lookupSymbol, refreshPublicPrices, type SymbolMatch } from "@/lib/market-data"
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -67,15 +70,106 @@ function App() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [formError, setFormError] = useState("")
+  const [selectedPortfolio, setSelectedPortfolio] = useState<"Whole Portfolio" | PortfolioName>("Whole Portfolio")
+  const [quoteStatus, setQuoteStatus] = useState<"loading" | "live" | "fallback">("loading")
+  const [liveQuoteCount, setLiveQuoteCount] = useState(0)
+  const [lastQuoteUpdate, setLastQuoteUpdate] = useState<Date | null>(null)
+  const [lookupStatus, setLookupStatus] = useState<"idle" | "searching" | "found" | "not-found" | "error">("idle")
+  const [symbolMatch, setSymbolMatch] = useState<SymbolMatch | null>(null)
 
-  const holdings = useMemo(() => calculateHoldings(assets, transactions), [assets, transactions])
+  const allHoldings = useMemo(() => calculateHoldings(assets, transactions), [assets, transactions])
+  const holdings = selectedPortfolio === "Whole Portfolio"
+    ? allHoldings
+    : allHoldings.filter((holding) => holding.portfolio === selectedPortfolio)
+  const visibleSymbols = new Set(holdings.map((holding) => holding.symbol))
   const totalValue = holdings.reduce((sum, holding) => sum + holding.marketValue, 0)
   const totalBasis = holdings.reduce((sum, holding) => sum + holding.costBasis, 0)
   const totalGain = totalValue - totalBasis
-  const dividendTotal = trailingYearDividends(transactions)
+  const dividendTotal = trailingYearDividends(
+    transactions.filter((transaction) => visibleSymbols.has(transaction.symbol)),
+  )
+  const cryptoIds = assets.map((asset) => asset.coinGeckoId).filter(Boolean).join(",")
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const updateQuotes = async () => {
+      setQuoteStatus("loading")
+      try {
+        const quotes = await refreshPublicPrices(assets, controller.signal)
+        setLiveQuoteCount(quotes.size)
+        if (quotes.size) {
+          setAssets((current) => current.map((asset) => ({
+            ...asset,
+            currentPrice: quotes.get(asset.symbol) ?? asset.currentPrice,
+          })))
+          setLastQuoteUpdate(new Date())
+          setQuoteStatus("live")
+        } else {
+          setQuoteStatus("fallback")
+        }
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setQuoteStatus("fallback")
+        }
+      }
+    }
+
+    void updateQuotes()
+    const interval = window.setInterval(updateQuotes, 60_000)
+    return () => {
+      controller.abort()
+      window.clearInterval(interval)
+    }
+  }, [cryptoIds])
+
+  useEffect(() => {
+    if (!dialogOpen || !form.symbol.trim()) {
+      setLookupStatus("idle")
+      setSymbolMatch(null)
+      return
+    }
+
+    const controller = new AbortController()
+    setLookupStatus("searching")
+    const timeout = window.setTimeout(async () => {
+      try {
+        const match = await lookupSymbol(form.symbol, assets, controller.signal)
+        setSymbolMatch(match)
+        if (!match) {
+          setLookupStatus("not-found")
+          return
+        }
+
+        setForm((current) => ({
+          ...current,
+          name: match.name,
+          assetType: match.type,
+          price: current.price || (match.currentPrice?.toString() ?? ""),
+        }))
+        setLookupStatus("found")
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setLookupStatus("error")
+        }
+      }
+    }, 450)
+
+    return () => {
+      controller.abort()
+      window.clearTimeout(timeout)
+    }
+  }, [dialogOpen, form.symbol])
 
   const openTransaction = () => {
-    setForm({ ...emptyForm, symbol: holdings[0]?.symbol ?? "" })
+    const defaultSymbol = holdings[0]?.symbol ?? allHoldings[0]?.symbol ?? ""
+    const defaultAsset = assets.find((asset) => asset.symbol === defaultSymbol)
+    setForm({
+      ...emptyForm,
+      symbol: defaultSymbol,
+      name: defaultAsset?.name ?? "",
+      assetType: defaultAsset?.type ?? "Stock",
+    })
     setFormError("")
     setDialogOpen(true)
   }
@@ -85,7 +179,7 @@ function App() {
     const symbol = form.symbol.trim().toUpperCase()
     const quantity = Number(form.quantity)
     const price = Number(form.price)
-    const matchingHolding = holdings.find((holding) => holding.symbol === symbol)
+    const matchingHolding = allHoldings.find((holding) => holding.symbol === symbol)
 
     if (!symbol || !form.date || quantity <= 0 || price < 0) {
       setFormError("Enter a symbol, date, positive quantity, and valid price.")
@@ -109,8 +203,10 @@ function App() {
           symbol,
           name: form.name.trim() || symbol,
           type: form.assetType,
+          portfolio: form.assetType === "Crypto" ? "Crypto" : "Growth Portfolio",
           currentPrice: price,
           color: ["#7857ef", "#2e8c74", "#ef9b44", "#4a82d8"][current.length % 4],
+          coinGeckoId: symbolMatch?.coinGeckoId,
         },
       ])
     }
@@ -130,6 +226,7 @@ function App() {
   }
 
   const recentActivity = [...transactions]
+    .filter((transaction) => visibleSymbols.has(transaction.symbol))
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 4)
 
@@ -144,9 +241,12 @@ function App() {
             <span className="text-[17px] font-semibold tracking-[-0.03em]">Ledge</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full bg-[#f2f5f3] px-3 py-1.5 text-xs text-[#65726d] sm:flex">
-              <span className="size-1.5 rounded-full bg-[#2f9878]" />
-              Sample portfolio
+            <div
+              className="hidden items-center gap-2 rounded-full bg-[#f2f5f3] px-3 py-1.5 text-xs text-[#65726d] sm:flex"
+              title={quoteStatus === "live" ? `Live public quotes updated ${lastQuoteUpdate?.toLocaleTimeString()}` : "Using saved prices when a public quote is unavailable"}
+            >
+              <span className={`size-1.5 rounded-full ${quoteStatus === "live" ? "bg-[#2f9878]" : "bg-[#d59a3a]"}`} />
+              {quoteStatus === "loading" ? "Refreshing prices" : quoteStatus === "live" ? `${liveQuoteCount} live quote` : "Saved prices"}
             </div>
             <Button onClick={openTransaction} className="rounded-full bg-[#14201c] px-4 text-white hover:bg-[#263630]">
               <Plus className="size-4" />
@@ -165,9 +265,20 @@ function App() {
             </h1>
             <p className="mt-2 text-sm text-[#65726d]">Here’s how your investments are doing today.</p>
           </div>
-          <button className="flex w-fit items-center gap-2 rounded-lg border border-[#dbe2de] bg-white px-3 py-2 text-sm font-medium shadow-sm">
-            All accounts <ChevronDown className="size-4 text-[#7d8984]" />
-          </button>
+          <div className="relative w-fit">
+            <select
+              aria-label="Choose portfolio"
+              value={selectedPortfolio}
+              onChange={(event) => setSelectedPortfolio(event.target.value as "Whole Portfolio" | PortfolioName)}
+              className="h-10 appearance-none rounded-lg border border-[#dbe2de] bg-white py-2 pr-9 pl-3 text-sm font-medium shadow-sm outline-none transition focus:border-[#8c9993] focus:ring-2 focus:ring-[#dce5e1]"
+            >
+              <option>Whole Portfolio</option>
+              <option>Growth Portfolio</option>
+              <option>Dividends Portfolio</option>
+              <option>Crypto</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-[#7d8984]" />
+          </div>
         </section>
 
         <section className="mb-5 grid gap-4 lg:grid-cols-3">
@@ -231,9 +342,15 @@ function App() {
                 <h2 className="text-base font-semibold tracking-[-0.02em]">Your holdings</h2>
                 <p className="mt-1 text-xs text-[#7b8782]">{holdings.length} assets across stocks, ETFs, and crypto</p>
               </div>
-              <Badge variant="secondary" className="rounded-full bg-[#f1f4f2] font-medium text-[#66736e]">
-                USD
-              </Badge>
+              <div className="flex items-center gap-2">
+                <span className="hidden items-center gap-1.5 text-[11px] text-[#77847f] sm:flex">
+                  <RefreshCw className={`size-3 ${quoteStatus === "loading" ? "animate-spin" : ""}`} />
+                  {quoteStatus === "live" ? "Live where available" : "Saved-price fallback"}
+                </span>
+                <Badge variant="secondary" className="rounded-full bg-[#f1f4f2] font-medium text-[#66736e]">
+                  USD
+                </Badge>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left">
@@ -336,32 +453,51 @@ function App() {
               <FormField label="Symbol">
                 <Input
                   value={form.symbol}
-                  onChange={(event) => setForm((current) => ({ ...current, symbol: event.target.value.toUpperCase() }))}
+                  onChange={(event) => {
+                    setForm((current) => ({
+                      ...current,
+                      symbol: event.target.value.toUpperCase(),
+                      name: "",
+                      price: "",
+                    }))
+                    setFormError("")
+                  }}
                   placeholder="e.g. AAPL"
                   className="h-10 uppercase"
                 />
+                <p className={`min-h-4 text-[11px] ${lookupStatus === "error" || lookupStatus === "not-found" ? "text-[#a36c27]" : "text-[#77847f]"}`}>
+                  {lookupStatus === "searching" && "Looking up symbol…"}
+                  {lookupStatus === "found" && `${symbolMatch?.source === "coingecko" ? "Live provider" : "Portfolio"} match found`}
+                  {lookupStatus === "not-found" && "No public match. Enter the details below."}
+                  {lookupStatus === "error" && "Lookup unavailable. You can enter details manually."}
+                </p>
               </FormField>
               <FormField label="Date">
                 <Input type="date" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="h-10" />
               </FormField>
             </div>
 
-            {form.type === "buy" && !assets.some((asset) => asset.symbol === form.symbol.trim().toUpperCase()) && (
-              <div className="grid gap-4 rounded-xl border border-[#e2e7e4] bg-[#f7f9f8] p-4 sm:grid-cols-2">
-                <FormField label="Asset name">
-                  <Input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Apple Inc." className="h-10 bg-white" />
-                </FormField>
-                <FormField label="Asset type">
-                  <select
-                    value={form.assetType}
-                    onChange={(event) => setForm((current) => ({ ...current, assetType: event.target.value as AssetType }))}
-                    className="h-10 w-full rounded-lg border border-input bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring/30"
-                  >
-                    <option>Stock</option><option>ETF</option><option>Crypto</option>
-                  </select>
-                </FormField>
-              </div>
-            )}
+            <div className="grid gap-4 rounded-xl border border-[#e2e7e4] bg-[#f7f9f8] p-4 sm:grid-cols-2">
+              <FormField label="Asset name">
+                <Input
+                  value={form.name}
+                  onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                  placeholder={lookupStatus === "searching" ? "Looking up…" : "Apple Inc."}
+                  readOnly={lookupStatus === "found"}
+                  className="h-10 bg-white read-only:bg-[#f0f3f1] read-only:text-[#53605b]"
+                />
+              </FormField>
+              <FormField label="Asset type">
+                <select
+                  value={form.assetType}
+                  onChange={(event) => setForm((current) => ({ ...current, assetType: event.target.value as AssetType }))}
+                  disabled={lookupStatus === "found"}
+                  className="h-10 w-full rounded-lg border border-input bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-[#f0f3f1] disabled:text-[#53605b]"
+                >
+                  <option>Stock</option><option>ETF</option><option>Crypto</option>
+                </select>
+              </FormField>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label={form.type === "dividend" ? "Eligible quantity" : "Quantity"}>
