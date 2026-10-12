@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import type { FormEvent, ReactNode } from "react"
 import {
   ArrowDownLeft,
@@ -76,6 +76,8 @@ function App() {
   const [lastQuoteUpdate, setLastQuoteUpdate] = useState<Date | null>(null)
   const [lookupStatus, setLookupStatus] = useState<"idle" | "searching" | "found" | "not-found" | "error">("idle")
   const [symbolMatch, setSymbolMatch] = useState<SymbolMatch | null>(null)
+  const assetsRef = useRef(assets)
+  assetsRef.current = assets
 
   const allHoldings = useMemo(() => calculateHoldings(assets, transactions), [assets, transactions])
   const holdings = selectedPortfolio === "Whole Portfolio"
@@ -96,7 +98,7 @@ function App() {
     const updateQuotes = async () => {
       setQuoteStatus("loading")
       try {
-        const quotes = await refreshPublicPrices(assets, controller.signal)
+        const quotes = await refreshPublicPrices(assetsRef.current, controller.signal)
         setLiveQuoteCount(quotes.size)
         if (quotes.size) {
           setAssets((current) => current.map((asset) => ({
@@ -125,16 +127,13 @@ function App() {
 
   useEffect(() => {
     if (!dialogOpen || !form.symbol.trim()) {
-      setLookupStatus("idle")
-      setSymbolMatch(null)
       return
     }
 
     const controller = new AbortController()
-    setLookupStatus("searching")
     const timeout = window.setTimeout(async () => {
       try {
-        const match = await lookupSymbol(form.symbol, assets, controller.signal)
+        const match = await lookupSymbol(form.symbol, assetsRef.current, controller.signal)
         setSymbolMatch(match)
         if (!match) {
           setLookupStatus("not-found")
@@ -171,6 +170,8 @@ function App() {
       assetType: defaultAsset?.type ?? "Stock",
     })
     setFormError("")
+    setLookupStatus(defaultSymbol ? "searching" : "idle")
+    setSymbolMatch(null)
     setDialogOpen(true)
   }
 
@@ -461,6 +462,8 @@ function App() {
                       price: "",
                     }))
                     setFormError("")
+                    setLookupStatus(event.target.value ? "searching" : "idle")
+                    setSymbolMatch(null)
                   }}
                   placeholder="e.g. AAPL"
                   className="h-10 uppercase"
