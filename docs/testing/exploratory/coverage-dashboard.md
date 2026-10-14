@@ -54,10 +54,10 @@ Update this dashboard after each debrief. Coverage describes what was explored; 
 
 ## Current risks and unanswered questions
 
-1. 
-2. 
+1.
+2.
 
 ## Recommended next sessions
 
-1. 
-2. 
+1.
+2.

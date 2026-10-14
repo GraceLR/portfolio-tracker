@@ -30,13 +30,13 @@ Describe the problem in one or two sentences, including the affected feature and
 
 ## Preconditions and test data
 
-- 
+-
 
 ## Steps to reproduce
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Expected result
 
@@ -81,3 +81,4 @@ Explain the user, financial, data-integrity, accessibility, or business impact.
 
 ### Retest notes
 
+_Add retest notes._

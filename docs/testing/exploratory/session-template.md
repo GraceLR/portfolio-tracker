@@ -55,17 +55,17 @@ Record what you tried, what you observed, and what you decided to explore next.
 
 Issues include environment problems, missing requirements, unclear expected results, or testability limitations.
 
-- 
+-
 
 ### Questions
 
-- 
+-
 
 ### Opportunities and observations
 
 Record usability improvements, design ideas, and risks that are not defects.
 
-- 
+-
 
 ## Evidence
 
@@ -106,8 +106,8 @@ Use **PROOF** as a conversation guide:
 
 ### Follow-up actions
 
-- [ ] 
-- [ ] 
+- [ ] Add action
+- [ ] Add action
 
 ### Tester confidence
 

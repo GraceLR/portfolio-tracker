@@ -18,5 +18,5 @@ Use this file to prioritize exploratory work. Create a charter from `charter-tem
 
 Add observations that may warrant a future session:
 
-- 
-- 
+-
+-

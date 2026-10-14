@@ -26,14 +26,14 @@ Describe the user or business risk addressed by this charter.
 
 ## In scope
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Out of scope
 
-- 
-- 
+-
+-
 
 ## Risk areas
 
@@ -45,9 +45,9 @@ Describe the user or business risk addressed by this charter.
 
 These are prompts, not mandatory scripted steps.
 
-- 
-- 
-- 
+-
+-
+-
 
 Consider techniques such as:
 
