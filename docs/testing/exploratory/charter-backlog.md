@@ -6,9 +6,9 @@ Use this file to prioritize exploratory work. Create a charter from `charter-tem
 |---|---|---|---|---|---|---|
 | CH-001 | Explore average-cost calculations across buys and partial sales | Incorrect financial totals | Critical | Proposed | — | Prepare calculation oracle |
 | CH-002 | Explore trailing-12-month dividend boundaries | Incorrect income reporting | Critical | Proposed | — | Prepare cutoff-date data |
-| CH-003 | Explore transaction validation and recovery from invalid input | Corrupt or impossible holdings | High | Proposed | — | Define invalid data groups |
+| CH-003 | Explore transaction validation and recovery from invalid input | Corrupt or impossible holdings | High | In progress | SES-001, paused 2026-10-28 | Resume `charters/CH-003-transaction-validation/CH-003-SES-001-buy-tab.md` at cases 1.1, 1.2, and 2.1–2.5 |
 | CH-004 | Explore portfolio filtering and total consistency | Mismatched holdings and summary totals | High | Proposed | — | Map assets to portfolios |
-| CH-005 | Explore stock and crypto symbol lookup under normal and failure conditions | Wrong asset identity or stale lookup result | High | Proposed | — | Prepare symbols and network failures |
+| CH-005 | Explore stock symbol lookup under normal and failure conditions | Wrong asset identity or stale lookup result | High | Proposed | — | Prepare symbols and directory misses |
 | CH-006 | Explore live-price refresh, fallback, and provider recovery | Mislabelled or stale market value | Critical | Proposed | — | Define live/fallback oracle |
 | CH-007 | Explore responsive behavior and keyboard accessibility | Users cannot complete core workflows | High | Proposed | — | Prepare viewport matrix |
 | CH-008 | Explore rapid actions, interruptions, and repeated submission | Duplicate or inconsistent transactions | High | Proposed | — | Identify state transitions |

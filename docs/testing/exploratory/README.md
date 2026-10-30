@@ -32,6 +32,7 @@ Create the `charters`, `sessions`, `defects`, and `evidence` folders as they bec
 - **Proposed** — waiting to be scheduled
 - **Ready** — scope and environment are prepared
 - **In progress** — currently being explored
+- **Paused** — stopped before the timebox finished, and intended to resume
 - **Completed** — session and debrief are finished
 - **Blocked** — testing cannot continue
 - **Follow-up required** — another charter or investigation is needed
