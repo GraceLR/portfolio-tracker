@@ -50,6 +50,11 @@ const compactCurrency = new Intl.NumberFormat("en-US", {
 })
 
 const quantityFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 6 })
+
+function decimalPlaces(value: string) {
+  const fraction = value.trim().split(".")[1]
+  return fraction?.length ?? 0
+}
 const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" })
 const today = new Date().toISOString().slice(0, 10)
 
@@ -150,6 +155,11 @@ function App() {
       return
     }
 
+    if (form.type === "buy" && decimalPlaces(form.quantity) > 5) {
+      setFormError("Quantity cannot have more than five decimal places.")
+      return
+    }
+
     if (form.type === "sell" && (!matchingHolding || quantity > matchingHolding.quantity)) {
       setFormError(`You do not own enough ${symbol} to record this sale.`)
       return
@@ -185,6 +195,7 @@ function App() {
         price,
       },
     ])
+    setFormError("")
     setDialogOpen(false)
   }
 
