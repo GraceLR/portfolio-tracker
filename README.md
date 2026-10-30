@@ -6,9 +6,9 @@ A front-end portfolio dashboard built with React and TypeScript. It answers thre
 - What is the average-cost basis of each holding?
 - How much dividend income was collected during the trailing 12 months?
 
-The app includes sample stocks, ETFs, and cryptocurrency and lets you record buy, sell, and dividend transactions. Data currently lives in React state, which keeps this version simple while leaving a clear path to an API later.
+The app includes sample stocks and ETFs and lets you record buy, sell, and dividend transactions. Data currently lives in React state, which keeps this version simple while leaving a clear path to an API later.
 
-The portfolio selector filters the dashboard between the whole portfolio, growth, dividends, and crypto. Symbol entry checks assets already in the portfolio, queries CoinGecko for cryptocurrency metadata, and then checks a bundled US security directory for stocks such as VZ. CoinGecko prices refresh every 60 seconds; stocks and ETFs keep their saved sample prices until a backend can protect credentials for a broader market-data provider.
+The portfolio selector filters the dashboard between the whole portfolio, growth, and dividends. Symbol entry checks assets already in the portfolio, then a bundled US security directory for stocks such as VZ. Prices stay at the saved sample values until a backend can protect credentials for a market-data provider.
 
 ## Run locally
 
@@ -43,7 +43,7 @@ This logic is separate from the dashboard components, so a future API can replac
 
 ## Live-data limitation
 
-This front-end version uses only providers that allow direct browser requests without exposing a private API key. The interface labels live and fallback data rather than presenting saved stock prices as live. A future backend should request stock and ETF quotes, cache them, and keep the provider key secret.
+This front-end version keeps the sample price stored with each holding and labels those prices as saved. A future backend should request stock and ETF quotes, cache them, and keep the provider key secret.
 
 > This project is a learning tool, not financial or tax advice. Cost-basis rules vary by asset and jurisdiction.
 # React + TypeScript + Vite

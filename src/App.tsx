@@ -7,7 +7,6 @@ import {
   CircleDollarSign,
   Landmark,
   Plus,
-  RefreshCw,
   Sparkles,
   WalletCards,
 } from "lucide-react"
@@ -35,7 +34,7 @@ import {
   type Transaction,
   type TransactionType,
 } from "@/lib/portfolio"
-import { lookupSymbol, refreshPublicPrices, type SymbolMatch } from "@/lib/market-data"
+import { lookupSymbol, type SymbolMatch } from "@/lib/market-data"
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -71,9 +70,6 @@ function App() {
   const [form, setForm] = useState(emptyForm)
   const [formError, setFormError] = useState("")
   const [selectedPortfolio, setSelectedPortfolio] = useState<"Whole Portfolio" | PortfolioName>("Whole Portfolio")
-  const [quoteStatus, setQuoteStatus] = useState<"loading" | "live" | "fallback">("loading")
-  const [liveQuoteCount, setLiveQuoteCount] = useState(0)
-  const [lastQuoteUpdate, setLastQuoteUpdate] = useState<Date | null>(null)
   const [lookupStatus, setLookupStatus] = useState<"idle" | "searching" | "found" | "not-found" | "error">("idle")
   const [symbolMatch, setSymbolMatch] = useState<SymbolMatch | null>(null)
   const assetsRef = useRef(assets)
@@ -89,54 +85,20 @@ function App() {
   const dividendTotal = trailingYearDividends(
     transactions.filter((transaction) => visibleSymbols.has(transaction.symbol)),
   )
-  const cryptoIds = assets.map((asset) => asset.coinGeckoId).filter(Boolean).join(",")
-
   useEffect(() => {
     assetsRef.current = assets
   }, [assets])
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    const updateQuotes = async () => {
-      setQuoteStatus("loading")
-      try {
-        const quotes = await refreshPublicPrices(assetsRef.current, controller.signal)
-        setLiveQuoteCount(quotes.size)
-        if (quotes.size) {
-          setAssets((current) => current.map((asset) => ({
-            ...asset,
-            currentPrice: quotes.get(asset.symbol) ?? asset.currentPrice,
-          })))
-          setLastQuoteUpdate(new Date())
-          setQuoteStatus("live")
-        } else {
-          setQuoteStatus("fallback")
-        }
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === "AbortError")) {
-          setQuoteStatus("fallback")
-        }
-      }
-    }
-
-    void updateQuotes()
-    const interval = window.setInterval(updateQuotes, 60_000)
-    return () => {
-      controller.abort()
-      window.clearInterval(interval)
-    }
-  }, [cryptoIds])
 
   useEffect(() => {
     if (!dialogOpen || !form.symbol.trim()) {
       return
     }
 
-    const controller = new AbortController()
+    let cancelled = false
     const timeout = window.setTimeout(async () => {
       try {
-        const match = await lookupSymbol(form.symbol, assetsRef.current, controller.signal)
+        const match = await lookupSymbol(form.symbol, assetsRef.current)
+        if (cancelled) return
         setSymbolMatch(match)
         if (!match) {
           setLookupStatus("not-found")
@@ -150,15 +112,13 @@ function App() {
           price: current.price || (match.currentPrice?.toString() ?? ""),
         }))
         setLookupStatus("found")
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === "AbortError")) {
-          setLookupStatus("error")
-        }
+      } catch {
+        if (!cancelled) setLookupStatus("error")
       }
     }, 450)
 
     return () => {
-      controller.abort()
+      cancelled = true
       window.clearTimeout(timeout)
     }
   }, [dialogOpen, form.symbol])
@@ -207,10 +167,9 @@ function App() {
           symbol,
           name: form.name.trim() || symbol,
           type: form.assetType,
-          portfolio: form.assetType === "Crypto" ? "Crypto" : "Growth Portfolio",
+          portfolio: "Growth Portfolio",
           currentPrice: price,
           color: ["#7857ef", "#2e8c74", "#ef9b44", "#4a82d8"][current.length % 4],
-          coinGeckoId: symbolMatch?.coinGeckoId,
         },
       ])
     }
@@ -247,10 +206,10 @@ function App() {
           <div className="flex items-center gap-3">
             <div
               className="hidden items-center gap-2 rounded-full bg-[#f2f5f3] px-3 py-1.5 text-xs text-[#65726d] sm:flex"
-              title={quoteStatus === "live" ? `Live public quotes updated ${lastQuoteUpdate?.toLocaleTimeString()}` : "Using saved prices when a public quote is unavailable"}
+              title="Sample prices saved with each holding"
             >
-              <span className={`size-1.5 rounded-full ${quoteStatus === "live" ? "bg-[#2f9878]" : "bg-[#d59a3a]"}`} />
-              {quoteStatus === "loading" ? "Refreshing prices" : quoteStatus === "live" ? `${liveQuoteCount} live quote` : "Saved prices"}
+              <span className="size-1.5 rounded-full bg-[#d59a3a]" />
+              Saved prices
             </div>
             <Button onClick={openTransaction} className="rounded-full bg-[#14201c] px-4 text-white hover:bg-[#263630]">
               <Plus className="size-4" />
@@ -279,7 +238,6 @@ function App() {
               <option>Whole Portfolio</option>
               <option>Growth Portfolio</option>
               <option>Dividends Portfolio</option>
-              <option>Crypto</option>
             </select>
             <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-[#7d8984]" />
           </div>
@@ -344,12 +302,11 @@ function App() {
             <div className="flex items-center justify-between border-b border-[#e5e9e7] px-5 py-5 md:px-6">
               <div>
                 <h2 className="text-base font-semibold tracking-[-0.02em]">Your holdings</h2>
-                <p className="mt-1 text-xs text-[#7b8782]">{holdings.length} assets across stocks, ETFs, and crypto</p>
+                <p className="mt-1 text-xs text-[#7b8782]">{holdings.length} {holdings.length === 1 ? "asset" : "assets"} across stocks and ETFs</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="hidden items-center gap-1.5 text-[11px] text-[#77847f] sm:flex">
-                  <RefreshCw className={`size-3 ${quoteStatus === "loading" ? "animate-spin" : ""}`} />
-                  {quoteStatus === "live" ? "Live where available" : "Saved-price fallback"}
+                  Saved prices
                 </span>
                 <Badge variant="secondary" className="rounded-full bg-[#f1f4f2] font-medium text-[#66736e]">
                   USD
@@ -473,13 +430,7 @@ function App() {
                 />
                 <p className={`min-h-4 text-[11px] ${lookupStatus === "error" || lookupStatus === "not-found" ? "text-[#a36c27]" : "text-[#77847f]"}`}>
                   {lookupStatus === "searching" && "Looking up symbol…"}
-                  {lookupStatus === "found" && `${
-                    symbolMatch?.source === "coingecko"
-                      ? "Live crypto provider"
-                      : symbolMatch?.source === "security-directory"
-                        ? "US security directory"
-                        : "Portfolio"
-                  } match found`}
+                  {lookupStatus === "found" && `${symbolMatch?.source === "security-directory" ? "US security directory" : "Portfolio"} match found`}
                   {lookupStatus === "not-found" && "No public match. Enter the details below."}
                   {lookupStatus === "error" && "Lookup unavailable. You can enter details manually."}
                 </p>
@@ -506,7 +457,7 @@ function App() {
                   disabled={lookupStatus === "found"}
                   className="h-10 w-full rounded-lg border border-input bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-[#f0f3f1] disabled:text-[#53605b]"
                 >
-                  <option>Stock</option><option>ETF</option><option>Crypto</option>
+                  <option>Stock</option><option>ETF</option>
                 </select>
               </FormField>
             </div>

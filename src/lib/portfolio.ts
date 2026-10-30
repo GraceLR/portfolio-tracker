@@ -1,6 +1,6 @@
-export type AssetType = "Stock" | "ETF" | "Crypto"
+export type AssetType = "Stock" | "ETF"
 export type TransactionType = "buy" | "sell" | "dividend"
-export type PortfolioName = "Growth Portfolio" | "Dividends Portfolio" | "Crypto"
+export type PortfolioName = "Growth Portfolio" | "Dividends Portfolio"
 
 export interface Asset {
   symbol: string
@@ -9,7 +9,6 @@ export interface Asset {
   portfolio: PortfolioName
   currentPrice: number
   color: string
-  coinGeckoId?: string
 }
 
 export interface Transaction {
@@ -33,7 +32,6 @@ export interface Holding extends Asset {
 export const seedAssets: Asset[] = [
   { symbol: "VTI", name: "Vanguard Total Stock Market", type: "ETF", portfolio: "Growth Portfolio", currentPrice: 311.42, color: "#7857ef" },
   { symbol: "AAPL", name: "Apple Inc.", type: "Stock", portfolio: "Growth Portfolio", currentPrice: 247.88, color: "#2e8c74" },
-  { symbol: "BTC", name: "Bitcoin", type: "Crypto", portfolio: "Crypto", currentPrice: 68124.3, color: "#ef9b44", coinGeckoId: "bitcoin" },
   { symbol: "SCHD", name: "Schwab US Dividend Equity", type: "ETF", portfolio: "Dividends Portfolio", currentPrice: 31.18, color: "#4a82d8" },
 ]
 
@@ -48,8 +46,6 @@ export const seedTransactions: Transaction[] = [
   { id: "t2", symbol: "VTI", type: "buy", date: monthsAgo(8, 14), quantity: 12, price: 281.6 },
   { id: "t3", symbol: "AAPL", type: "buy", date: monthsAgo(18, 3), quantity: 28, price: 184.4 },
   { id: "t4", symbol: "AAPL", type: "buy", date: monthsAgo(5, 19), quantity: 8, price: 221.75 },
-  { id: "t5", symbol: "BTC", type: "buy", date: monthsAgo(15, 11), quantity: 0.12, price: 59200 },
-  { id: "t6", symbol: "BTC", type: "buy", date: monthsAgo(3, 7), quantity: 0.045, price: 64350 },
   { id: "t7", symbol: "SCHD", type: "buy", date: monthsAgo(13, 22), quantity: 130, price: 26.85 },
   { id: "t8", symbol: "SCHD", type: "buy", date: monthsAgo(2, 10), quantity: 35, price: 29.64 },
   { id: "t9", symbol: "VTI", type: "dividend", date: monthsAgo(3, 25), quantity: 52, price: 0.94 },
