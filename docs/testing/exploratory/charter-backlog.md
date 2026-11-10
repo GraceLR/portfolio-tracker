@@ -6,7 +6,7 @@ Use this file to prioritize exploratory work. Create a charter from `charter-tem
 |---|---|---|---|---|---|---|
 | CH-001 | Explore average-cost calculations across buys and partial sales | Incorrect financial totals | Critical | Proposed | — | Prepare calculation oracle |
 | CH-002 | Explore trailing-12-month dividend boundaries | Incorrect income reporting | Critical | Proposed | — | Prepare cutoff-date data |
-| CH-003 | Explore transaction validation and recovery from invalid input | Corrupt or impossible holdings | High | In progress | SES-001, in progress 2026-11-10 | Continue `charters/CH-003-transaction-validation/CH-003-SES-001-buy-tab.md` at cases 2.1–2.5. BUG-001 is closed. |
+| CH-003 | Explore transaction validation and recovery from invalid input | Corrupt or impossible holdings | High | In progress | SES-001, paused 2026-11-10 | Resume `charters/CH-003-transaction-validation/CH-003-SES-001-buy-tab.md` at cases 2.1, 2.2, 2.5, and 3.1. BUG-002 and BUG-003 are open. |
 | CH-004 | Explore portfolio filtering and total consistency | Mismatched holdings and summary totals | High | Proposed | — | Map assets to portfolios |
 | CH-005 | Explore stock symbol lookup under normal and failure conditions | Wrong asset identity or stale lookup result | High | Proposed | — | Prepare symbols and directory misses |
 | CH-006 | Explore live-price refresh, fallback, and provider recovery | Mislabelled or stale market value | Critical | Proposed | — | Define live/fallback oracle |

@@ -8,7 +8,7 @@ Update this dashboard after each debrief. Coverage describes what was explored; 
 |---|---|
 | Release/build | Ledge frontend, main |
 | Git commit | 59d2f9b |
-| Testing period | SES-001 resumed 2026-11-10 09:30. 49 minutes spent before the pause. |
+| Testing period | SES-001 paused 2026-11-10 10:12. 91 minutes spent across two sittings. |
 | Test lead | Assign when the session starts |
 | Overall confidence | Low |
 | Release recommendation | Not assessed |
@@ -20,7 +20,7 @@ Update this dashboard after each debrief. Coverage describes what was explored; 
 | Portfolio valuation | | | None / Smoke / Shallow / Deep | Low / Medium / High | 0 | |
 | Average-cost basis | | | None / Smoke / Shallow / Deep | Low / Medium / High | 0 | |
 | Trailing-year dividends | | | None / Smoke / Shallow / Deep | Low / Medium / High | 0 | |
-| Buy transactions | CH-003 | SES-001 | Shallow | Medium | 0 | Five-decimal boundary passed and BUG-001 is closed. Cases 2.1–2.5 are still open. |
+| Buy transactions | CH-003 | SES-001 | Shallow | Medium | 2 | Session paused. BUG-002 and BUG-003 are open. Resume cases 2.1, 2.2, 2.5, and 3.1. |
 | Sell transactions | CH-003 | — | None | Low | 0 | SES-002 after SES-001 |
 | Dividend transactions | CH-003 | — | None | Low | 0 | SES-003 after SES-001 |
 | Portfolio filtering | | | None / Smoke / Shallow / Deep | Low / Medium / High | 0 | |
@@ -45,8 +45,8 @@ Update this dashboard after each debrief. Coverage describes what was explored; 
 | Metric | Count |
 |---|---:|
 | Sessions completed | 0 |
-| Total session time | 49 minutes so far. SES-001 is in progress. |
-| Defects found | 1 |
+| Total session time | 91 minutes. SES-001 is paused. |
+| Defects found | 3 |
 | Critical defects open | 0 |
 | High defects open | 0 |
 | Blocked sessions | 0 |
@@ -54,11 +54,13 @@ Update this dashboard after each debrief. Coverage describes what was explored; 
 
 ## Current risks and unanswered questions
 
-1. BUG-001 is closed. Buy cases 1.1–1.3 passed on 59d2f9b. The same five-decimal boundary on Sell and Dividend is still untested.
-2. CH-003: a blank or zero price is accepted, and a zero-cost buy can show a 0.0% return.
-3. CH-003: a sale above the open quantity must be refused, and a dividend is not capped at shares owned.
+1. BUG-003: Buy quantity `-0.00001` is kept, and the field only requires a value greater than or equal to 0. The confirmed rule is strictly greater than 0.
+2. BUG-002: quantity `0` on Buy is rejected with `Enter a symbol, date, positive quantity, and valid price.` The confirmed message is `Enter a positive quantity.`
+3. BUG-001 is closed. Buy cases 1.1–1.3 passed on 59d2f9b. The same five-decimal boundary on Sell and Dividend is still untested.
+4. CH-003: a blank or zero price is accepted, and a zero-cost buy can show a 0.0% return.
+5. CH-003: a sale above the open quantity must be refused, and a dividend is not capped at shares owned.
 
 ## Recommended next sessions
 
-1. Continue SES-001. Cases 2.1–2.5 are still open on the Buy quantity field.
+1. Resume SES-001. Cases 2.1, 2.2, 2.5, and 3.1 are still open. BUG-002 and BUG-003 are open on the Buy quantity field.
 2. CH-001, after its calculation oracle is prepared. It is still the first critical money check.
