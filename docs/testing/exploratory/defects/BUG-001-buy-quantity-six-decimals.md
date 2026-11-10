@@ -11,7 +11,7 @@
 | Charter/session | CH-003 / SES-001 |
 | Severity | Medium |
 | Priority | Medium |
-| Status | New |
+| Status | Closed |
 
 ## Summary
 
@@ -79,12 +79,18 @@ The book stays internally consistent, and the average-cost math uses the quantit
 
 | Field | Value |
 |---|---|
-| Fixed in commit | |
-| Retested by | |
-| Retest date | |
-| Retest result | |
-| Regression scope | Buy quantity boundaries, cases 1.1–1.3. Then the same decimal boundary on Sell and Dividend. |
+| Fixed in commit | 59d2f9b |
+| Retested by | SES-001 tester |
+| Retest date | 2026-11-10 |
+| Retest result | Pass |
+| Regression scope | Buy cases 1.1–1.3 passed on 59d2f9b. The same decimal boundary on Sell and Dividend is still open for SES-002 and SES-003. |
 
 ### Retest notes
 
-_Add retest notes._
+On commit 59d2f9b, Buy of VTI at price `10`:
+
+- Case 1.1, quantity `10.00005`, was accepted. VTI quantity became 62.
+- Case 1.2, quantity `10.0005`, was accepted. VTI quantity became 62.0005.
+- Case 1.3, quantity `10.000005`, was rejected. The dialog stayed open and the seed totals stayed unchanged.
+
+The original failure from 2026-10-28 no longer occurs. Sell and Dividend were not part of this retest.
